@@ -6,7 +6,7 @@ console.log("Logs from your program will appear here!");
 
 // Uncomment this block to pass the first stage
 const command = process.argv[2];
-
+ 
 switch (command) {
   case "init":
     createGitDirectory();
