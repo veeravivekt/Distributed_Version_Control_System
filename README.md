@@ -1,6 +1,6 @@
 # Distributed Version Control System
 > My entire documentation for creating a ```git clone``` not just the command lol
-## The Basics:
+## The Basics - Understanding Git:
 Common locations where code stays in git:
 1. Local Working Directory (Code Playground)
 2. Staging Area (Temporary holding spot for files before commiting)
