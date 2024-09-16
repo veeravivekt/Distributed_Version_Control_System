@@ -7,7 +7,7 @@ Common locations where code stays in git:
 3. Local Repository (Place where we store commited changes locally)
 4. Remote Repository (Server for sharing and backing up code)
 
-![alt text](/image.png)
+![alt text](readmeDir/image.png)
 
 
 ## Part 1: .git Directory
