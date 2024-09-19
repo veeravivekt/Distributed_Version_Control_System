@@ -1,5 +1,7 @@
 # Distributed Version Control System
-> My entire documentation for creating a ```git clone``` not just the command lol
+> My entire documentation for creating a ```git clone``` not just the command :)
+
+> ```git``` at its core, is a system of interconnected text files that reference each other through filenames.
 ## The Basics - Understanding Git: 
 Common locations where code stays in git:
 1. Local Working Directory (Code Playground)
@@ -60,6 +62,7 @@ $ tree .git
     └── tags
 
 ```
+> Note: if you want tree structure like above for your folder : ``` brew install tree```
 
 ### Git Folder and File Structure
 
@@ -75,7 +78,7 @@ When you initialize a Git repository, several files and folders are created. Her
    - This folder contains scripts that Git can run automatically before or after certain actions (like committing or pushing).
 
 4. **objects**  
-   - This folder stores the actual Git objects, which represent your repository's data, such as files, commits, and changes. We'll explore this in detail later.
+   - This folder stores the actual Git objects, which represent your repository's data, such as files, commits, and changes.
 
 5. **refs**  
    - `refs` holds references or pointers to branches and tags.  
