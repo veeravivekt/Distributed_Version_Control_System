@@ -19,10 +19,12 @@ So whats that?
 ### 1. Two-tree Architecture.
 
 This is what a lot of other VCS use such as Subversion. They have a working tree and repository
+
 ![alt text](readmeDir/image2.png)
 
 ### 2. Three-tree Architecture
 Git has the working tree and the repository, and additionally in between is another tree which is the staging area.
+
 ![alt text](readmeDir/image3.png)
 
 ### Git File States
