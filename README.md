@@ -98,16 +98,16 @@ git init
 ```
 
 ## Git Objects
-So we will be dealing with 3 Git objects:
-**1. Blobs:** Used to store file data (only content of file without name or permissions)
-**2. Trees:** Store directory structures(including names and permissions)
-**3. Commits:** Keeps the data like commit message, author, commiter, parent commits, etc..
+So we will be dealing with 3 Git objects: \
+**1. Blobs:** Used to store file data (only content of file without name or permissions) \
+**2. Trees:** Store directory structures(including names and permissions) \
+**3. Commits:** Keeps the data like commit message, author, commiter, parent commits, etc.. \
 
 Every Git object is identified by a unique 40-character SHA-1 hash, called the "object hash."
 for example: `9fb8b43296432c0f2212264f2206cff35b0c63`
 
-The SHA-1 hash in Git is a 40-character identifier that ensures: - 
-**Uniqueness:** Each commit and content piece is uniquely tracked. - 
-**Integrity:** Detects data corruption or tampering.
+The SHA-1 hash in Git is a 40-character identifier that ensures: \
+**Uniqueness:** Each commit and content piece is uniquely tracked. \
+**Integrity:** Detects data corruption or tampering. \
 ## Part 2: Read a blob object git cat-file
 
