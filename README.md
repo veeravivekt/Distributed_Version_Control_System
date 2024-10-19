@@ -170,4 +170,45 @@ you don’t modify a file in git, you create a new file in a different locatio
 
 In git repository, the paths are actually determined by contents. 
 
+How to read and decode a Git object (specifically a blob) from the Git object database. Let's break it down step by step: 
+**1. Parsing the Object Hash:** The code starts by splitting the provided hash into two parts
+```java
+java String hash = args; 
+String dirHash = hash.substring(0, 2); 
+String fileHash = hash.substring(2);
+```
+- **dirHash**: The first two characters of the hash, used as the directory name.
+- **fileHash**: The remaining characters, used as the file name.
 
+**2. Locating the Blob File:** The code constructs the path to the blob file in the Git object database:
+```java
+File blobFile = new File("./.git/objects/" + dirHash + "/" + fileHash);
+```
+
+This path follows Git's object storage structure: `.git/objects/xx/yyyyyyyyy`.
+
+**3. Reading and Inflating the Blob Content:** Git stores objects in a compressed format. The code reads and decompresses the blob:
+
+```java
+String blob = new BufferedReader(new InputStreamReader(new InflaterInputStream(new FileInputStream(blobFile)))).readLine();
+```
+
+This line does several things:
+- Opens the blob file
+- Creates an `InflaterInputStream` to decompress the content
+- Wraps it in a `BufferedReader` to read the decompressed data
+
+**4. Extracting the Actual Content:** Git prepends some metadata to the object content. The code extracts the actual content:
+
+```java
+String content = blob.substring(blob.indexOf("\0") + 1)
+```
+
+This line finds the null byte `(\0)` that separates the metadata from the content and extracts everything after it.
+
+**5. Outputting the Content:** Finally, the code prints the extracted content:
+```java
+System.out.print(content);
+```
+
+This code essentially replicates part of what happens when you use `git cat-file -p <hash>` command, focusing on reading and displaying the content of a blob object.
