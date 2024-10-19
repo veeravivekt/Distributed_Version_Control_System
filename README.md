@@ -4,7 +4,9 @@
 > ```git``` at its core, is a system of interconnected text files that reference each other through filenames.
 
 ## The Basics - Understanding Git: 
-Git is a content-addressable filesystem, acting as a key-value store. Insert content into a Git repository, and Git returns a unique key to retrieve it later.
+Consider Git as a tool that manages a filesystem by capturing snapshots of its state at different points in time.
+
+ It is a content-addressable filesystem, acting as a key-value store(or more like value-value store, as it computes keys from data itself). Insert content into a Git repository, and Git returns a unique key to retrieve it later.
 
 Common locations where code stays in git:
 1. Local Working Directory (Code Playground)
@@ -98,7 +100,7 @@ git init
 ```
 
 ## Git Objects
-So we will be dealing with 3 Git objects: \
+So we will be dealing with 3 Git objects: 
 **1. Blobs:** Used to store file data (only content of file without name or permissions) \
 **2. Trees:** Store directory structures(including names and permissions) \
 **3. Commits:** Keeps the data like commit message, author, commiter, parent commits, etc.. \
@@ -108,6 +110,6 @@ for example: `9fb8b43296432c0f2212264f2206cff35b0c63`
 
 The SHA-1 hash in Git is a 40-character identifier that ensures: \
 **Uniqueness:** Each commit and content piece is uniquely tracked. \
-**Integrity:** Detects data corruption or tampering. \
+**Integrity:** Detects data corruption or tampering. 
 ## Part 2: Read a blob object git cat-file
-
+Blobs are binary large objects.
