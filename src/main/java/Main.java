@@ -2,7 +2,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
-import javax.management.RuntimeErrorException;
+import java.util.zip.InflaterInputStream;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 
@@ -32,9 +32,9 @@ public class Main {
         String fileHash = hash.substring(2);
         File blobFile = new File("./.git/objects/" + dirHash + "/" + fileHash);
         try {
-          String blob = new BufferedReader(new InputStreamReader(new FileInputStream(blobFile))).readLine();
+          String blob = new BufferedReader(new InputStreamReader(new InflaterInputStream(new FileInputStream(blobFile)))).readLine();
           String content = blob.substring(blob.indexOf("\0") + 1);
-          System.out.println(content);
+          System.out.print(content);
         } catch (IOException e) {
           throw new RuntimeException(e);
         }
