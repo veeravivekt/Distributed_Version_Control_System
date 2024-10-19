@@ -2,7 +2,10 @@
 > My entire documentation for creating a ```git clone``` not just the command :)
 
 > ```git``` at its core, is a system of interconnected text files that reference each other through filenames.
+
 ## The Basics - Understanding Git: 
+Git is a content-addressable filesystem, acting as a key-value store. Insert content into a Git repository, and Git returns a unique key to retrieve it later.
+
 Common locations where code stays in git:
 1. Local Working Directory (Code Playground)
 2. Staging Area (Temporary holding spot for files before commiting)
@@ -42,7 +45,7 @@ In Git, files can be in one of three states:
    - The file's changes are safely stored in the Git repository.
 
 
-## Part 1: .git Directory
+## Part 1: .git Directory - git init
 
 What does .git directory even contain?
 
@@ -88,3 +91,16 @@ When you initialize a Git repository, several files and folders are created. Her
    - `refs/tags` contains pointers to tags.
 
 Each of these plays a critical role in how Git manages your repository!
+
+> So how do you even initialize a git repo you ask?
+```git
+git init
+```
+
+## Git Objects
+So we will be dealing with 3 Git objects:
+**1. Blobs:** Used to store file data (only content of file without name or permissions)
+**2. Trees:** Store directory structures(including names and permissions)
+**3. Commits:** Keeps the data like commit message, author, commiter, parent commits, etc..
+## Part 2: Read a blob object git cat-file
+
