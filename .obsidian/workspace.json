@@ -1,0 +1,341 @@
+{
+  "main": {
+    "id": "47f05cb9afdfc05a",
+    "type": "split",
+    "children": [
+      {
+        "id": "23cd27f8ac465474",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "5ba61dc7039b303c",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Archive/Summary.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Summary"
+            }
+          },
+          {
+            "id": "42bded045e5c49b2",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Archive/Summary.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Summary"
+            }
+          },
+          {
+            "id": "792fba8c8001e146",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Resume Filling.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Resume Filling"
+            }
+          },
+          {
+            "id": "d47fa1fcaa0fcd70",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Archive/Summary.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Summary"
+            }
+          },
+          {
+            "id": "eedaca29f48d534a",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Archive/DataMining.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "DataMining"
+            }
+          },
+          {
+            "id": "f580b378a3ce0131",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Archive/Summary.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Summary"
+            }
+          },
+          {
+            "id": "034997bad881d12d",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Resume Filling.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Resume Filling"
+            }
+          },
+          {
+            "id": "27e2219129789a81",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Know my Resume.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Know my Resume"
+            }
+          },
+          {
+            "id": "c6a231b989af2173",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Diet/Berry + Turmeric Muffins.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Berry + Turmeric Muffins"
+            }
+          },
+          {
+            "id": "aec571cd661121e3",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "README.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "README"
+            }
+          }
+        ],
+        "currentTab": 9
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "262197f2e9fdd645",
+    "type": "split",
+    "children": [
+      {
+        "id": "b10e3f8e86722261",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "d6db68fe40da1ffa",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "1548e7b1425067d9",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "8d741ce8c8ff4f00",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 238
+  },
+  "right": {
+    "id": "2080ef8e40a86d5b",
+    "type": "split",
+    "children": [
+      {
+        "id": "22a27fcce23e037e",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "d64131252787fb1a",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Diet/Citrus Salmon.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for Citrus Salmon"
+            }
+          },
+          {
+            "id": "d29bc0e2c60968ae",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Diet/Citrus Salmon.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from Citrus Salmon"
+            }
+          },
+          {
+            "id": "c0785aaea6680b40",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "2518c0734461ecab",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Diet/Citrus Salmon.md"
+              },
+              "icon": "lucide-list",
+              "title": "Outline of Citrus Salmon"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false
+    }
+  },
+  "active": "aec571cd661121e3",
+  "lastOpenFiles": [
+    "readmeDir/image2.png",
+    "readmeDir/image3.png",
+    "readmeDir/image.png",
+    "README.md",
+    "Diet/Chocolate Green Smoothie.md",
+    "Diet/Citrus Salmon.md",
+    "Diet/Thai Chicken Salad.md",
+    "Diet/Grain Bowl.md",
+    "Diet/Berry + Turmeric Muffins.md",
+    "Know my Resume.md",
+    "Diet",
+    "Resume Filling.md",
+    "Job Resources.md",
+    "Archive/Jeff.md",
+    "Job Skills Priority.md",
+    "Pasted image 20240920183043.png",
+    "Gwar/Story Telling.md",
+    "AI tools/Learning.md",
+    "Story Telling - GWAR  - Guide.md",
+    "Archive/AI Roadmap.md",
+    "Archive/output.png",
+    "Archive/Summary.md",
+    "Archive/Schedule.md",
+    "Archive/Pasted image 20240921164438.png",
+    "Archive/Pasted image 20240921164108.png",
+    "Gwar/Abstract.md",
+    "z_275 Results/Report.md",
+    "z_275 Results/World Bank Dataset.md",
+    "Archive/Data Mining Report.md",
+    "Archive/DataMining.md",
+    "Pasted image 20241006140655.png",
+    "Archive/Pasted image 20241014121227.png",
+    "Archive/Pasted image 20241014121059.png",
+    "Articles/Caching.md",
+    "Articles",
+    "z_275 Results/NYC Dataset.md",
+    "Gwar/Library Session.md",
+    "z_275 Results",
+    "Untitled.canvas",
+    "Archive",
+    "Time Log/September",
+    "Time Log",
+    "Gwar",
+    "Archive/Projects",
+    "AI tools",
+    "Archive/Food"
+  ]
+}
