@@ -8,4 +8,4 @@
 
 set -e # Exit on failure
 
-# (This file is empty since JavaScript programs don't use a compile step)
+mvn -B package -Ddir=/tmp/codecrafters-build-git-java

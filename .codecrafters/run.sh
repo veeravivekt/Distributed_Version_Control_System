@@ -8,4 +8,4 @@
 
 set -e # Exit on failure
 
-exec node $(dirname "$0")/app/main.js "$@"
+exec java -jar /tmp/codecrafters-build-git-java/codecrafters-git.jar "$@"
