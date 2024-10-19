@@ -111,5 +111,15 @@ for example: `9fb8b43296432c0f2212264f2206cff35b0c63`
 The SHA-1 hash in Git is a 40-character identifier that ensures: \
 **Uniqueness:** Each commit and content piece is uniquely tracked. \
 **Integrity:** Detects data corruption or tampering. 
+
+`git hash-object` converts an existing file into a git object
 ## Part 2: Read a blob object git cat-file
-Blobs are binary large objects.
+Blobs are binary large objects. \
+
+`git cat-file` prints an existing git object to the standard output.
+
+you don’t modify a file in git, you create a new file in a different location.
+
+In git repository, the paths are actually determined by contents. 
+
+
