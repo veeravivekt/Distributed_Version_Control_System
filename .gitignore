@@ -1,6 +1,6 @@
 *.jar
 target/
 .idea/
-.codecrafters
+.codecrafters/
 codecrafters.yml
-.obsidian
+.obsidian/
