@@ -212,3 +212,5 @@ System.out.print(content);
 ```
 
 This code essentially replicates part of what happens when you use `git cat-file -p <hash>` command, focusing on reading and displaying the content of a blob object.
+
+## Part 3: Read a blob object git cat-file
