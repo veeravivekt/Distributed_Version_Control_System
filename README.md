@@ -14,7 +14,7 @@ Common locations where code stays in git:
 3. Local Repository (Place where we store commited changes locally)
 4. Remote Repository (Server for sharing and backing up code)
 
-![alt text](readmeDir/image.png)
+![alt text](readmeImages/image.png)
 
 
 >Git uses Three-tree Architecture. 
@@ -25,12 +25,12 @@ So whats that?
 
 This is what a lot of other VCS use such as Subversion. They have a working tree and repository
 
-![alt text](readmeDir/image2.png)
+![alt text](readmeImages/image2.png)
 
 ### 2. Three-tree Architecture
 Git has the working tree and the repository, and additionally in between is another tree which is the staging area.
 
-![alt text](readmeDir/image3.png)
+![alt text](readmeImages/image3.png)
 
 ### Git File States
 
