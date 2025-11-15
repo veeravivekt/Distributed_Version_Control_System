@@ -629,11 +629,16 @@ public class Main {
     String currentBranch = GitRepository.getCurrentBranch();
     
     if (headCommit == null) {
-      System.out.println("On branch " + currentBranch + "\n\nNo commits yet\n");
+      String branchDisplay = currentBranch != null ? currentBranch : "main";
+      System.out.println("On branch " + branchDisplay + "\n\nNo commits yet\n");
       return;
     }
     
-    System.out.println("On branch " + currentBranch + "\n");
+    if (currentBranch != null) {
+      System.out.println("On branch " + currentBranch + "\n");
+    } else {
+      System.out.println("HEAD detached at " + headCommit.substring(0, 7) + "\n");
+    }
     
     // Get HEAD tree
     Map<String, String> headTreeFiles = getTreeFiles(headCommit);
@@ -845,7 +850,7 @@ public class Main {
           String currentBranch = GitRepository.getCurrentBranch();
           for (File branchFile : branchFiles) {
             String branchName = branchFile.getName();
-            String prefix = branchName.equals(currentBranch) ? "* " : "  ";
+            String prefix = (currentBranch != null && branchName.equals(currentBranch)) ? "* " : "  ";
             System.out.println(prefix + branchName);
           }
         }
@@ -864,7 +869,7 @@ public class Main {
       // Delete branch
       String branchName = args[2];
       String currentBranch = GitRepository.getCurrentBranch();
-      if (branchName.equals(currentBranch)) {
+      if (currentBranch != null && branchName.equals(currentBranch)) {
         throw new IOException("Cannot delete current branch");
       }
       File branchFile = new File(".git/refs/heads/" + branchName);
@@ -1062,8 +1067,15 @@ public class Main {
     
     // Update HEAD
     String currentBranch = GitRepository.getCurrentBranch();
-    File branchFile = new File(".git/refs/heads/" + currentBranch);
-    Files.write(branchFile.toPath(), (commitHash + "\n").getBytes());
+    if (currentBranch != null) {
+      // On a branch - update branch ref
+      File branchFile = new File(".git/refs/heads/" + currentBranch);
+      Files.write(branchFile.toPath(), (commitHash + "\n").getBytes());
+    } else {
+      // Detached HEAD - update HEAD directly
+      File headFile = new File(".git/HEAD");
+      Files.write(headFile.toPath(), (commitHash + "\n").getBytes());
+    }
     
     if (mode.equals("--hard")) {
       // Reset working directory and index

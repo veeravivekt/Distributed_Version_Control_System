@@ -44,7 +44,7 @@ public class GitRepository {
   public static String getCurrentBranch() throws IOException {
     File headFile = new File(".git/HEAD");
     if (!headFile.exists()) {
-      return "main";
+      return null;
     }
     String headContent = Files.readString(headFile.toPath()).trim();
     if (headContent.startsWith("ref: ")) {
@@ -53,7 +53,11 @@ public class GitRepository {
         return refPath.substring(11);
       }
     }
-    return "main";
+    return null; // Detached HEAD state
+  }
+  
+  public static boolean isOnBranch() throws IOException {
+    return getCurrentBranch() != null;
   }
   
   public static String resolveRef(String ref) throws IOException {

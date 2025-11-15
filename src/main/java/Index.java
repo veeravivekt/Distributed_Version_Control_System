@@ -137,12 +137,10 @@ public class Index {
   }
   
   private static void writeIndexEntry(DataOutputStream dos, IndexEntry entry) throws IOException {
-    // Write ctime (8 bytes)
-    dos.writeLong(0); // seconds
-    dos.writeInt(0); // nanoseconds
-    // Write mtime (8 bytes)
-    dos.writeLong(0); // seconds
-    dos.writeInt(0); // nanoseconds
+    // Write ctime (8 bytes) - seconds and nanoseconds combined as single long
+    dos.writeLong(0);
+    // Write mtime (8 bytes) - seconds and nanoseconds combined as single long
+    dos.writeLong(0);
     // Write dev (4 bytes)
     dos.writeInt(0);
     // Write ino (4 bytes)
