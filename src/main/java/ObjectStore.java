@@ -1,6 +1,7 @@
 import java.io.*;
 import java.nio.file.Files;
 import java.security.MessageDigest;
+import java.util.Arrays;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
@@ -82,7 +83,7 @@ public class ObjectStore {
     String header = new String(data, 0, nullIndex);
     String[] parts = header.split(" ");
     String type = parts[0];
-    byte[] content = java.util.Arrays.copyOfRange(data, nullIndex + 1, data.length);
+    byte[] content = Arrays.copyOfRange(data, nullIndex + 1, data.length);
     
     return new ObjectInfo(type, content);
   }

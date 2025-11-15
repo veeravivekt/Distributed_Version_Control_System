@@ -55,5 +55,37 @@ public class GitRepository {
     }
     return "main";
   }
+  
+  public static String resolveRef(String ref) throws IOException {
+    // Check if it's a branch name
+    File branchFile = new File(".git/refs/heads/" + ref);
+    if (branchFile.exists()) {
+      return Files.readString(branchFile.toPath()).trim();
+    }
+    
+    // Check if it's a tag name
+    File tagFile = new File(".git/refs/tags/" + ref);
+    if (tagFile.exists()) {
+      return Files.readString(tagFile.toPath()).trim();
+    }
+    
+    // Check if it's already a commit hash (40 chars hex)
+    if (ref.length() == 40 && ref.matches("[0-9a-f]{40}")) {
+      // Verify it exists
+      String dirHash = ref.substring(0, 2);
+      String fileHash = ref.substring(2);
+      File objectFile = new File(".git/objects/" + dirHash + "/" + fileHash);
+      if (objectFile.exists()) {
+        return ref;
+      }
+    }
+    
+    return null;
+  }
+  
+  public static void updateHeadToBranch(String branchName) throws IOException {
+    File headFile = new File(".git/HEAD");
+    Files.write(headFile.toPath(), ("ref: refs/heads/" + branchName + "\n").getBytes());
+  }
 }
 

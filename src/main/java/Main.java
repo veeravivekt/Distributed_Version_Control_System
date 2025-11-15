@@ -26,6 +26,9 @@ public class Main {
         case "status" -> status();
         case "branch" -> branch(args);
         case "tag" -> tag(args);
+        case "merge" -> merge(args);
+        case "diff" -> diff(args);
+        case "reset" -> reset(args);
         default -> System.out.println("Unknown command: " + command);
       }
     } catch (Exception e) {
@@ -45,14 +48,13 @@ public class Main {
     
     head.createNewFile();
     Files.write(head.toPath(), "ref: refs/heads/main\n".getBytes());
+    
+    // Create config file
+    Config.createDefaultConfig();
+    
     System.out.println("Initialized git directory");
   }
 
-  // ========== UTILITY METHODS ==========
-  
-  private static String storeObject(String type, byte[] content) throws IOException {
-    return ObjectStore.storeObject(type, content);
-  }
 
   // ========== CAT-FILE ==========
   private static void catFile(String[] args) throws IOException {
@@ -126,7 +128,7 @@ public class Main {
     }
     
     byte[] content = Files.readAllBytes(file.toPath());
-    String hash = storeObject("blob", content);
+    String hash = ObjectStore.storeObject("blob", content);
     System.out.println(hash);
   }
 
@@ -209,7 +211,7 @@ public class Main {
         entries.add(new TreeEntry("40000", name, treeHash));
       } else {
         byte[] content = Files.readAllBytes(file.toPath());
-        String blobHash = storeObject("blob", content);
+        String blobHash = ObjectStore.storeObject("blob", content);
         entries.add(new TreeEntry("100644", name, blobHash));
       }
     }
@@ -226,7 +228,7 @@ public class Main {
       baos.write(hashBytes);
     }
     
-    return storeObject("tree", baos.toByteArray());
+    return ObjectStore.storeObject("tree", baos.toByteArray());
   }
 
   private static byte[] hexToBytes(String hex) {
@@ -242,10 +244,6 @@ public class Main {
     String treeHash = null;
     String parentHash = null;
     String message = null;
-    String author = System.getProperty("user.name", "Unknown") + " <" + 
-                    System.getProperty("user.email", "unknown@example.com") + ">";
-    long timestamp = System.currentTimeMillis() / 1000;
-    String timezone = "+0000";
     
     // Parse arguments
     for (int i = 1; i < args.length; i++) {
@@ -270,17 +268,7 @@ public class Main {
       throw new IOException("Commit message required (-m)");
     }
     
-    StringBuilder commitContent = new StringBuilder();
-    commitContent.append("tree ").append(treeHash).append("\n");
-    if (parentHash != null) {
-      commitContent.append("parent ").append(parentHash).append("\n");
-    }
-    commitContent.append("author ").append(author).append(" ").append(timestamp).append(" ").append(timezone).append("\n");
-    commitContent.append("committer ").append(author).append(" ").append(timestamp).append(" ").append(timezone).append("\n");
-    commitContent.append("\n");
-    commitContent.append(message).append("\n");
-    
-    String commitHash = storeObject("commit", commitContent.toString().getBytes());
+    String commitHash = createCommit(treeHash, parentHash, message);
     System.out.println(commitHash);
   }
 
@@ -299,8 +287,8 @@ public class Main {
       throw new IOException("Commit message required (-m)");
     }
     
-    // Write tree from current directory
-    String treeHash = writeTree();
+    // Write tree from index (staging area)
+    String treeHash = writeTreeFromIndex();
     
     // Get parent commit from HEAD
     String parentHash = GitRepository.getHeadCommit();
@@ -313,10 +301,89 @@ public class Main {
     
     System.out.println(commitHash);
   }
+  
+  // ========== WRITE-TREE-FROM-INDEX ==========
+  private static String writeTreeFromIndex() throws IOException {
+    Map<String, Index.IndexEntry> indexEntries = Index.readIndex();
+    
+    if (indexEntries.isEmpty()) {
+      throw new IOException("Nothing to commit (index is empty)");
+    }
+    
+    // Organize entries by directory
+    Map<String, Map<String, TreeEntry>> dirContents = new HashMap<>();
+    dirContents.put("", new TreeMap<>());
+    
+    // Process all index entries
+    for (Index.IndexEntry entry : indexEntries.values()) {
+      String[] parts = entry.path.split("/");
+      String dirPath = "";
+      
+      // Ensure all parent directories exist in dirContents
+      for (int i = 0; i < parts.length - 1; i++) {
+        String nextDir = dirPath.isEmpty() ? parts[i] : dirPath + "/" + parts[i];
+        dirContents.putIfAbsent(nextDir, new TreeMap<>());
+        dirPath = nextDir;
+      }
+      
+      // Add file to its directory
+      String fileName = parts[parts.length - 1];
+      dirContents.get(dirPath).put(fileName, new TreeEntry(entry.mode, fileName, entry.hash));
+    }
+    
+    // Build trees bottom-up
+    Map<String, String> treeHashes = new HashMap<>();
+    List<String> dirs = new ArrayList<>(dirContents.keySet());
+    dirs.sort((a, b) -> {
+      int depthA = a.isEmpty() ? 0 : a.split("/").length;
+      int depthB = b.isEmpty() ? 0 : b.split("/").length;
+      return Integer.compare(depthB, depthA); // Deepest first
+    });
+    
+    for (String dirPath : dirs) {
+      Map<String, TreeEntry> contents = dirContents.get(dirPath);
+      Map<String, TreeEntry> treeEntries = new TreeMap<>();
+      
+      // Add direct file entries
+      for (Map.Entry<String, TreeEntry> e : contents.entrySet()) {
+        treeEntries.put(e.getKey(), e.getValue());
+      }
+      
+      // Add subdirectory entries (if any)
+      String parentPath = dirPath;
+      for (String subDir : dirs) {
+        if (!subDir.equals(parentPath) && subDir.startsWith(parentPath.isEmpty() ? "" : parentPath + "/")) {
+          String relative = parentPath.isEmpty() ? subDir : subDir.substring(parentPath.length() + 1);
+          if (!relative.contains("/")) {
+            // Direct child directory
+            String treeHash = treeHashes.get(subDir);
+            if (treeHash != null) {
+              treeEntries.put(relative, new TreeEntry("40000", relative, treeHash));
+            }
+          }
+        }
+      }
+      
+      // Build tree object
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      for (TreeEntry entry : treeEntries.values()) {
+        baos.write(entry.mode.getBytes());
+        baos.write(' ');
+        baos.write(entry.name.getBytes());
+        baos.write(0);
+        byte[] hashBytes = hexToBytes(entry.hash);
+        baos.write(hashBytes);
+      }
+      
+      String treeHash = ObjectStore.storeObject("tree", baos.toByteArray());
+      treeHashes.put(dirPath, treeHash);
+    }
+    
+    return treeHashes.get("");
+  }
 
   private static String createCommit(String treeHash, String parentHash, String message) throws IOException {
-    String author = System.getProperty("user.name", "Unknown") + " <" + 
-                    System.getProperty("user.email", "unknown@example.com") + ">";
+    String author = Config.getUserName() + " <" + Config.getUserEmail() + ">";
     long timestamp = System.currentTimeMillis() / 1000;
     String timezone = "+0000";
     
@@ -330,9 +397,8 @@ public class Main {
     commitContent.append("\n");
     commitContent.append(message).append("\n");
     
-    return storeObject("commit", commitContent.toString().getBytes());
+    return ObjectStore.storeObject("commit", commitContent.toString().getBytes());
   }
-
 
   // ========== LOG ==========
   private static void log(String[] args) throws IOException {
@@ -370,22 +436,29 @@ public class Main {
     
     System.out.println("commit " + hash);
     
+    boolean inMessage = false;
     for (String line : lines) {
       if (line.startsWith("tree ") || line.startsWith("parent ") || 
           line.startsWith("author ") || line.startsWith("committer ")) {
         System.out.println(line);
-      } else if (!line.isEmpty()) {
-        System.out.println();
+      } else if (line.isEmpty() && !inMessage) {
+        inMessage = true;
+      } else if (inMessage || !line.isEmpty()) {
+        if (!inMessage) {
+          System.out.println();
+          inMessage = true;
+        }
         System.out.println("    " + line);
       }
     }
   }
-
+  
   private static String getParentCommit(String commitHash) throws IOException {
     ObjectStore.ObjectInfo obj = ObjectStore.parseObject(commitHash);
     String content = new String(obj.content);
     String[] lines = content.split("\n");
     
+    // Return first parent (for merge commits, there can be multiple)
     for (String line : lines) {
       if (line.startsWith("parent ")) {
         return line.substring(7);
@@ -393,6 +466,21 @@ public class Main {
     }
     
     return null;
+  }
+  
+  private static List<String> getParentCommits(String commitHash) throws IOException {
+    List<String> parents = new ArrayList<>();
+    ObjectStore.ObjectInfo obj = ObjectStore.parseObject(commitHash);
+    String content = new String(obj.content);
+    String[] lines = content.split("\n");
+    
+    for (String line : lines) {
+      if (line.startsWith("parent ")) {
+        parents.add(line.substring(7));
+      }
+    }
+    
+    return parents;
   }
 
   // ========== ADD ==========
@@ -415,7 +503,7 @@ public class Main {
     } else {
       // Create blob object and update index
       byte[] content = Files.readAllBytes(file.toPath());
-      String hash = storeObject("blob", content);
+      String hash = ObjectStore.storeObject("blob", content);
       Index.updateIndex(filePath, hash, "100644");
     }
   }
@@ -433,7 +521,7 @@ public class Main {
         addDirectory(file, filePath);
       } else {
         byte[] content = Files.readAllBytes(file.toPath());
-        String hash = storeObject("blob", content);
+        String hash = ObjectStore.storeObject("blob", content);
         Index.updateIndex(filePath, hash, "100644");
       }
     }
@@ -442,12 +530,18 @@ public class Main {
   // ========== CHECKOUT ==========
   private static void checkout(String[] args) throws IOException {
     if (args.length < 2) {
-      System.out.println("Usage: git checkout <commit-hash>");
+      System.out.println("Usage: git checkout <commit-hash|branch-name>");
       return;
     }
     
-    String hash = args[1];
-    ObjectStore.ObjectInfo obj = ObjectStore.parseObject(hash);
+    String ref = args[1];
+    String commitHash = GitRepository.resolveRef(ref);
+    
+    if (commitHash == null) {
+      throw new IOException("Invalid reference: " + ref);
+    }
+    
+    ObjectStore.ObjectInfo obj = ObjectStore.parseObject(commitHash);
     
     if (obj.type.equals("commit")) {
       // Extract tree hash from commit
@@ -462,11 +556,20 @@ public class Main {
       }
       if (treeHash != null) {
         checkoutTree(treeHash, new File("."));
-        // Update HEAD to point to this commit
-        Files.write(new File(".git/HEAD").toPath(), (hash + "\n").getBytes());
+        
+        // Check if ref is a branch name
+        File branchFile = new File(".git/refs/heads/" + ref);
+        if (branchFile.exists()) {
+          // Update HEAD to point to branch
+          GitRepository.updateHeadToBranch(ref);
+        } else {
+          // Detached HEAD - point directly to commit
+          Files.write(new File(".git/HEAD").toPath(), (commitHash + "\n").getBytes());
+        }
       }
     } else if (obj.type.equals("tree")) {
-      checkoutTree(hash, new File("."));
+      checkoutTree(commitHash, new File("."));
+      Files.write(new File(".git/HEAD").toPath(), (commitHash + "\n").getBytes());
     } else {
       throw new IOException("Cannot checkout non-commit/tree object");
     }
@@ -523,23 +626,213 @@ public class Main {
   // ========== STATUS ==========
   private static void status() throws IOException {
     String headCommit = GitRepository.getHeadCommit();
+    String currentBranch = GitRepository.getCurrentBranch();
     
     if (headCommit == null) {
-      System.out.println("On branch main\n\nNo commits yet\n");
+      System.out.println("On branch " + currentBranch + "\n\nNo commits yet\n");
       return;
     }
     
-    String currentBranch = GitRepository.getCurrentBranch();
     System.out.println("On branch " + currentBranch + "\n");
     
-    // Simplified status - in full implementation would compare working tree with index and HEAD
-    System.out.println("Changes not staged for commit:");
-    System.out.println("  (use \"git add <file>\" to update what will be committed)");
-    System.out.println("  (use \"git checkout -- <file>\" to discard changes in working directory)");
-    System.out.println();
-    System.out.println("no changes added to commit (use \"git add\")");
+    // Get HEAD tree
+    Map<String, String> headTreeFiles = getTreeFiles(headCommit);
+    
+    // Get index entries
+    Map<String, Index.IndexEntry> indexEntries = Index.readIndex();
+    
+    // Get working tree files
+    Map<String, String> workingTreeFiles = getWorkingTreeFiles();
+    
+    // Compare and categorize
+    List<String> staged = new ArrayList<>();
+    List<String> modified = new ArrayList<>();
+    List<String> deleted = new ArrayList<>();
+    List<String> untracked = new ArrayList<>();
+    
+    // Check staged changes (index vs HEAD)
+    for (Map.Entry<String, Index.IndexEntry> entry : indexEntries.entrySet()) {
+      String path = entry.getKey();
+      String indexHash = entry.getValue().hash;
+      String headHash = headTreeFiles.get(path);
+      
+      if (headHash == null) {
+        staged.add(path); // New file
+      } else if (!headHash.equals(indexHash)) {
+        staged.add(path); // Modified file
+      }
+    }
+    
+    // Check for deleted files in HEAD but not in index
+    for (String path : headTreeFiles.keySet()) {
+      if (!indexEntries.containsKey(path)) {
+        deleted.add(path);
+      }
+    }
+    
+    // Check working tree vs index
+    for (Map.Entry<String, String> entry : workingTreeFiles.entrySet()) {
+      String path = entry.getKey();
+      String workingHash = entry.getValue();
+      Index.IndexEntry indexEntry = indexEntries.get(path);
+      
+      if (indexEntry == null) {
+        if (!headTreeFiles.containsKey(path)) {
+          untracked.add(path);
+        }
+      } else if (!indexEntry.hash.equals(workingHash)) {
+        modified.add(path);
+      }
+    }
+    
+    // Check for files in index but not in working tree
+    for (String path : indexEntries.keySet()) {
+      if (!workingTreeFiles.containsKey(path) && !deleted.contains(path)) {
+        deleted.add(path);
+      }
+    }
+    
+    // Print status
+    if (!staged.isEmpty()) {
+      System.out.println("Changes to be committed:");
+      System.out.println("  (use \"git restore --staged <file>...\" to unstage)");
+      for (String file : staged) {
+        System.out.println("\tmodified:   " + file);
+      }
+      System.out.println();
+    }
+    
+    if (!modified.isEmpty() || !deleted.isEmpty()) {
+      System.out.println("Changes not staged for commit:");
+      System.out.println("  (use \"git add <file>...\" to update what will be committed)");
+      System.out.println("  (use \"git restore <file>...\" to discard changes in working directory)");
+      for (String file : modified) {
+        System.out.println("\tmodified:   " + file);
+      }
+      for (String file : deleted) {
+        System.out.println("\tdeleted:    " + file);
+      }
+      System.out.println();
+    }
+    
+    if (!untracked.isEmpty()) {
+      System.out.println("Untracked files:");
+      System.out.println("  (use \"git add <file>...\" to include in what will be committed)");
+      for (String file : untracked) {
+        System.out.println("\t" + file);
+      }
+      System.out.println();
+    }
+    
+    if (staged.isEmpty() && modified.isEmpty() && deleted.isEmpty() && untracked.isEmpty()) {
+      System.out.println("nothing to commit, working tree clean");
+    }
   }
   
+  private static Map<String, String> getTreeFiles(String commitHash) throws IOException {
+    Map<String, String> files = new HashMap<>();
+    
+    if (commitHash == null) {
+      return files;
+    }
+    
+    ObjectStore.ObjectInfo commitObj = ObjectStore.parseObject(commitHash);
+    if (!commitObj.type.equals("commit")) {
+      return files;
+    }
+    
+    String content = new String(commitObj.content);
+    String[] lines = content.split("\n");
+    String treeHash = null;
+    for (String line : lines) {
+      if (line.startsWith("tree ")) {
+        treeHash = line.substring(5);
+        break;
+      }
+    }
+    
+    if (treeHash != null) {
+      getTreeFilesRecursive(treeHash, "", files);
+    }
+    
+    return files;
+  }
+  
+  private static void getTreeFilesRecursive(String treeHash, String prefix, Map<String, String> files) throws IOException {
+    ObjectStore.ObjectInfo treeObj = ObjectStore.parseObject(treeHash);
+    if (!treeObj.type.equals("tree")) {
+      return;
+    }
+    
+    byte[] treeData = treeObj.content;
+    int pos = 0;
+    
+    while (pos < treeData.length) {
+      // Read mode
+      int modeEnd = pos;
+      while (modeEnd < treeData.length && treeData[modeEnd] != ' ') {
+        modeEnd++;
+      }
+      String mode = new String(treeData, pos, modeEnd - pos);
+      pos = modeEnd + 1;
+      
+      // Read name
+      int nameEnd = pos;
+      while (nameEnd < treeData.length && treeData[nameEnd] != 0) {
+        nameEnd++;
+      }
+      String name = new String(treeData, pos, nameEnd - pos);
+      pos = nameEnd + 1;
+      
+      // Read hash
+      StringBuilder hash = new StringBuilder();
+      for (int i = 0; i < 20; i++) {
+        hash.append(String.format("%02x", treeData[pos + i]));
+      }
+      pos += 20;
+      
+      String path = prefix.isEmpty() ? name : prefix + "/" + name;
+      
+      if (mode.equals("40000")) {
+        // Tree (directory)
+        getTreeFilesRecursive(hash.toString(), path, files);
+      } else {
+        // Blob (file)
+        files.put(path, hash.toString());
+      }
+    }
+  }
+  
+  private static Map<String, String> getWorkingTreeFiles() throws IOException {
+    Map<String, String> files = new HashMap<>();
+    getWorkingTreeFilesRecursive(new File("."), "", files);
+    return files;
+  }
+  
+  private static void getWorkingTreeFilesRecursive(File dir, String prefix, Map<String, String> files) throws IOException {
+    File[] fileList = dir.listFiles();
+    if (fileList == null) return;
+    
+    for (File file : fileList) {
+      if (file.getName().equals(".git")) continue;
+      
+      String path = prefix.isEmpty() ? file.getName() : prefix + "/" + file.getName();
+      
+      if (file.isDirectory()) {
+        getWorkingTreeFilesRecursive(file, path, files);
+      } else {
+        byte[] content = Files.readAllBytes(file.toPath());
+        String hash = ObjectStore.sha1Hash(("blob " + content.length + "\0").getBytes());
+        // Actually need to hash the full object format
+        String header = "blob " + content.length + "\0";
+        byte[] fullData = new byte[header.length() + content.length];
+        System.arraycopy(header.getBytes(), 0, fullData, 0, header.length());
+        System.arraycopy(content, 0, fullData, header.length(), content.length);
+        hash = ObjectStore.sha1Hash(fullData);
+        files.put(path, hash);
+      }
+    }
+  }
 
   // ========== BRANCH ==========
   private static void branch(String[] args) throws IOException {
@@ -583,7 +876,6 @@ public class Main {
     }
   }
 
-
   // ========== TAG ==========
   private static void tag(String[] args) throws IOException {
     if (args.length == 1) {
@@ -608,6 +900,192 @@ public class Main {
       tagFile.getParentFile().mkdirs();
       Files.write(tagFile.toPath(), (headCommit + "\n").getBytes());
     }
+  }
+
+  // ========== MERGE ==========
+  private static void merge(String[] args) throws IOException {
+    if (args.length < 2) {
+      System.out.println("Usage: git merge <branch-name>");
+      return;
+    }
+    
+    String branchName = args[1];
+    String branchCommit = GitRepository.resolveRef(branchName);
+    String currentCommit = GitRepository.getHeadCommit();
+    
+    if (branchCommit == null) {
+      throw new IOException("Branch not found: " + branchName);
+    }
+    
+    if (currentCommit == null) {
+      throw new IOException("No commits yet");
+    }
+    
+    if (branchCommit.equals(currentCommit)) {
+      System.out.println("Already up to date.");
+      return;
+    }
+    
+    // Find merge base (simplified - just use first common ancestor)
+    findMergeBase(currentCommit, branchCommit);
+    
+    // Create merge commit with two parents
+    String treeHash = writeTreeFromIndex();
+    String commitHash = createMergeCommit(treeHash, currentCommit, branchCommit, "Merge branch '" + branchName + "'");
+    
+    // Update HEAD
+    GitRepository.updateHead(commitHash);
+    
+    System.out.println("Merge made by recursive strategy.");
+    System.out.println(commitHash);
+  }
+  
+  private static String findMergeBase(String commit1, String commit2) throws IOException {
+    // Simplified: return the older commit (in real Git, would find common ancestor)
+    // For now, just return commit1 as a placeholder
+    Set<String> ancestors1 = getAncestors(commit1);
+    Set<String> ancestors2 = getAncestors(commit2);
+    
+    // Find common ancestor
+    for (String ancestor : ancestors1) {
+      if (ancestors2.contains(ancestor)) {
+        return ancestor;
+      }
+    }
+    
+    return null; // No common ancestor found
+  }
+  
+  private static Set<String> getAncestors(String commitHash) throws IOException {
+    Set<String> ancestors = new HashSet<>();
+    String current = commitHash;
+    while (current != null) {
+      ancestors.add(current);
+      current = getParentCommit(current);
+    }
+    return ancestors;
+  }
+  
+  private static String createMergeCommit(String treeHash, String parent1, String parent2, String message) throws IOException {
+    String author = Config.getUserName() + " <" + Config.getUserEmail() + ">";
+    long timestamp = System.currentTimeMillis() / 1000;
+    String timezone = "+0000";
+    
+    StringBuilder commitContent = new StringBuilder();
+    commitContent.append("tree ").append(treeHash).append("\n");
+    commitContent.append("parent ").append(parent1).append("\n");
+    commitContent.append("parent ").append(parent2).append("\n");
+    commitContent.append("author ").append(author).append(" ").append(timestamp).append(" ").append(timezone).append("\n");
+    commitContent.append("committer ").append(author).append(" ").append(timestamp).append(" ").append(timezone).append("\n");
+    commitContent.append("\n");
+    commitContent.append(message).append("\n");
+    
+    return ObjectStore.storeObject("commit", commitContent.toString().getBytes());
+  }
+
+  // ========== DIFF ==========
+  private static void diff(String[] args) throws IOException {
+    String commit1 = null;
+    String commit2 = null;
+    
+    if (args.length == 1) {
+      // Compare working tree with HEAD
+      commit1 = GitRepository.getHeadCommit();
+      commit2 = null; // working tree
+    } else if (args.length == 2) {
+      commit1 = GitRepository.resolveRef(args[1]);
+      commit2 = GitRepository.getHeadCommit();
+    } else if (args.length == 3) {
+      commit1 = GitRepository.resolveRef(args[1]);
+      commit2 = GitRepository.resolveRef(args[2]);
+    }
+    
+    if (commit1 == null && commit2 == null) {
+      System.out.println("No differences found");
+      return;
+    }
+    
+    Map<String, String> files1 = commit1 != null ? getTreeFiles(commit1) : getWorkingTreeFiles();
+    Map<String, String> files2 = commit2 != null ? getTreeFiles(commit2) : getWorkingTreeFiles();
+    
+    // Find differences
+    Set<String> allFiles = new HashSet<>(files1.keySet());
+    allFiles.addAll(files2.keySet());
+    
+    boolean hasDiff = false;
+    for (String file : allFiles) {
+      String hash1 = files1.get(file);
+      String hash2 = files2.get(file);
+      
+      if (hash1 == null) {
+        System.out.println("diff --git a/" + file + " b/" + file);
+        System.out.println("new file");
+        hasDiff = true;
+      } else if (hash2 == null) {
+        System.out.println("diff --git a/" + file + " b/" + file);
+        System.out.println("deleted file");
+        hasDiff = true;
+      } else if (!hash1.equals(hash2)) {
+        System.out.println("diff --git a/" + file + " b/" + file);
+        System.out.println("index " + hash1.substring(0, 7) + ".." + hash2.substring(0, 7));
+        hasDiff = true;
+      }
+    }
+    
+    if (!hasDiff) {
+      System.out.println("No differences found");
+    }
+  }
+
+  // ========== RESET ==========
+  private static void reset(String[] args) throws IOException {
+    String mode = "--mixed"; // default
+    String commitRef = null;
+    
+    // Parse arguments
+    for (int i = 1; i < args.length; i++) {
+      if (args[i].equals("--soft") || args[i].equals("--mixed") || args[i].equals("--hard")) {
+        mode = args[i];
+      } else {
+        commitRef = args[i];
+      }
+    }
+    
+    if (commitRef == null) {
+      throw new IOException("Commit required");
+    }
+    
+    String commitHash = GitRepository.resolveRef(commitRef);
+    if (commitHash == null) {
+      throw new IOException("Invalid commit: " + commitRef);
+    }
+    
+    // Update HEAD
+    String currentBranch = GitRepository.getCurrentBranch();
+    File branchFile = new File(".git/refs/heads/" + currentBranch);
+    Files.write(branchFile.toPath(), (commitHash + "\n").getBytes());
+    
+    if (mode.equals("--hard")) {
+      // Reset working directory and index
+      ObjectStore.ObjectInfo commitObj = ObjectStore.parseObject(commitHash);
+      String content = new String(commitObj.content);
+      String[] lines = content.split("\n");
+      String treeHash = null;
+      for (String line : lines) {
+        if (line.startsWith("tree ")) {
+          treeHash = line.substring(5);
+          break;
+        }
+      }
+      if (treeHash != null) {
+        checkoutTree(treeHash, new File("."));
+      }
+      Index.clearIndex();
+    } else if (mode.equals("--mixed")) {
+      // Reset index only
+      Index.clearIndex();
+    }
+    // --soft: don't reset index or working directory
   }
 
   // ========== HELPER CLASSES ==========
